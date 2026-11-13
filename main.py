@@ -6,12 +6,21 @@ golden kintsugi dragon being repaired by tiny craftsmen, ukiyo-e style.
 The program is deterministic: it copies the same bytes every run.
 """
 
+import hashlib
 import os
 import shutil
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 OUT = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+
+
+def _sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def main() -> None:
@@ -21,6 +30,9 @@ def main() -> None:
     shutil.copyfile(src, dst)
     # The gate reads exactly these bytes; a short copy must never pass.
     assert dst.stat().st_size == src.stat().st_size, "short copy"
+    # Verify the copy byte-for-byte; a corrupt copy must fail loudly.
+    if _sha256(src) != _sha256(dst):
+        raise SystemExit("SHA-256 mismatch: copied entry.png differs from source")
 
 
 if __name__ == "__main__":
