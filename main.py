@@ -12,7 +12,7 @@ import shutil
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-OUT = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+OUT = Path(os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output")
 
 
 def _sha256(path: Path) -> str:
@@ -26,6 +26,8 @@ def _sha256(path: Path) -> str:
 def main() -> None:
     src = HERE / "entry.png"
     dst = OUT / "entry.png"
+    if not src.is_file():
+        raise SystemExit("entry.png missing beside main.py")
     OUT.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dst)
     # The gate reads exactly these bytes; a short copy must never pass.
